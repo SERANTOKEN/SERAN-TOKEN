@@ -13,7 +13,7 @@ Security: The contract architecture is optimized with mechanisms that prioritize
 Technical Specifications
 Network: BNB Smart Chain (BSC)
 
-Contact Address:
+Contact Address:0x6d202FFb65eeb967753D48FBF675A109095cd8dC
 
 Token Type: BEP-20
 
