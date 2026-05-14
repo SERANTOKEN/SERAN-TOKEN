@@ -19,5 +19,5 @@ Token Type: BEP-20
 
 Contact and Official Channels
 Website: https://sites.google.com/view/seranfam/ana-sayfa
-X; https://x.com/SERANFAM
+X; https://x.com/SERANFAM ,https://x.com/LahmacunT84078
 Telegram: https://t.me/+uYKZXXxG4_o4ZDA0
