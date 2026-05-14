@@ -1,0 +1,93 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.27;
+
+import {Ownable} from "@openzeppelin/contracts@5.5.0/access/Ownable.sol";
+import {ERC20} from "@openzeppelin/contracts@5.5.0/token/ERC20/ERC20.sol";
+import {ERC20Burnable} from "@openzeppelin/contracts@5.5.0/token/ERC20/extensions/ERC20Burnable.sol";
+import {ERC20Permit} from "@openzeppelin/contracts@5.5.0/token/ERC20/extensions/ERC20Permit.sol";
+
+contract SERAN is ERC20, ERC20Burnable, ERC20Permit, Ownable {
+    bool public tradingEnabled = false;
+    uint256 public maxTxPercent = 2;
+    uint256 public marketingTax = 3; 
+    address public marketingWallet;
+
+    mapping(address => bool) public isExcludedFromFee;
+    mapping(address => bool) public isExcludedFromLimit; // Limit muafiyeti için yeni mapping
+
+    constructor(address initialOwner, address _marketingWallet)
+        ERC20("SERAN", "SERAN")
+        ERC20Permit("SERAN")
+        Ownable(initialOwner)
+    {
+        marketingWallet = _marketingWallet;
+
+        // Ücret Muafiyetleri
+        isExcludedFromFee[initialOwner] = true;
+        isExcludedFromFee[_marketingWallet] = true;
+        isExcludedFromFee[address(this)] = true;
+
+        // Limit Muafiyetleri
+        isExcludedFromLimit[initialOwner] = true;
+        isExcludedFromLimit[_marketingWallet] = true;
+        isExcludedFromLimit[address(this)] = true;
+
+        _mint(msg.sender, 1_000_000_000 * 10 ** decimals());
+    }
+
+    function enableTrading() external onlyOwner {
+        tradingEnabled = true;
+    }
+
+    // Ücret muafiyetini yönetmek için fonksiyon
+    function setExcludedFromFee(address account, bool excluded) external onlyOwner {
+        isExcludedFromFee[account] = excluded;
+    }
+
+    // Limit muafiyetini yönetmek için fonksiyon
+    function setExcludedFromLimit(address account, bool excluded) external onlyOwner {
+        isExcludedFromLimit[account] = excluded;
+    }
+
+    function updateMarketingWallet(address _newWallet) external onlyOwner {
+        marketingWallet = _newWallet;
+        isExcludedFromFee[_newWallet] = true;
+        isExcludedFromLimit[_newWallet] = true;
+    }
+
+    function updateMaxTxPercent(uint256 newPercent) external onlyOwner {
+        require(newPercent >= 1 && newPercent <= 100, "Invalid percent");
+        maxTxPercent = newPercent;
+    }
+
+    function burnTokens(uint256 amount) external {
+        _burn(msg.sender, amount * 10 ** decimals());
+    }
+
+    function _update(address from, address to, uint256 value) internal virtual override {
+        // Alım-satım kapalıyken sadece owner veya muafiyetli adresler işlem yapabilir
+        if (!tradingEnabled && from != owner() && to != owner() && !isExcludedFromLimit[from]) {
+            revert("Trading not active");
+        }
+
+        uint256 finalAmount = value;
+
+        // Eğer alım-satım aktifse ve taraflar muaf değilse vergi ve limit uygula
+        if (tradingEnabled && !isExcludedFromFee[from] && !isExcludedFromFee[to]) {
+            
+            // Limit Kontrolü (isExcludedFromLimit kontrolü burada yapılır)
+            if (!isExcludedFromLimit[from] && !isExcludedFromLimit[to]) {
+                uint256 maxTx = (totalSupply() * maxTxPercent) / 100;
+                require(value <= maxTx, "Exceeds maxTxLimit");
+            }
+
+            // Vergi İşlemi
+            uint256 taxAmount = (value * marketingTax) / 100;
+            finalAmount = value - taxAmount;
+
+            super._update(from, marketingWallet, taxAmount);
+        }
+
+        super._update(from, to, finalAmount);
+    }
+}
