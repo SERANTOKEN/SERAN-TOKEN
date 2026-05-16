@@ -21,3 +21,5 @@ Contact and Official Channels
 Website: https://sites.google.com/view/seranfam/ana-sayfa
 X; https://x.com/SERANFAM ,https://x.com/LahmacunT84078
 Telegram: https://t.me/+uYKZXXxG4_o4ZDA0
+## Security & Anti-Bot Notice
+SERAN Token includes `is_anti_whale` and `is_blacklisted` functions inside its smart contract. These mechanisms were strictly implemented to protect our long-term community and textile-ecosystem from malicious front-running bots, snipers, and market manipulators during the launch phase. The contract is NOT a honeypot, buying and selling are 100% functional, and taxes are hardcoded to be reasonable and safe.
